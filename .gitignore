@@ -1,3 +1,13 @@
+# Nutrition Custom
+/android/app/google-services.json
+/ios/Flutter/flutter_export_environment.sh
+/ios/Runner/GoogleService-Info.plist
+.env
+
+/example/android/app/google-services.json
+/example/ios/Flutter/flutter_export_environment.sh
+/example/ios/Runner/GoogleService-Info.plist
+
 # Miscellaneous
 *.class
 *.log
