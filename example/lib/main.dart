@@ -20,7 +20,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
-  String _result;
+  List<dynamic> _result = [];
 
   Future<FirebaseUser> _handleSignIn() async {
     final GoogleSignInAccount googleUser = await widget._googleSignIn.signIn();
@@ -90,7 +90,12 @@ class _MyAppState extends State<MyApp> {
         body: Column(
           children: <Widget>[
             Text('Running on: $_platformVersion\n'),
-            Text(_result ?? ''),
+            Flexible(
+                child: ListView.builder(
+                    itemCount: _result.length,
+                    itemBuilder: (BuildContext ctxt, int index) {
+                      return new Text(_result[index].toString());
+                    })),
           ],
         ),
       ),
