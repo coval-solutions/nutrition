@@ -76,12 +76,17 @@ class _MyAppState extends State<MyApp> {
           backgroundColor: Colors.black,
           onPressed: () {
             print('Fab pressed.');
-            Nutrition.getData(oneWeekAgo, today).then((result) {
-              setState(() {
-                print(result);
-                _result = result;
-              });
+            Nutrition.requestPermission().then((result) {
+              if (result) {
+                Nutrition.getData(oneWeekAgo, today);
+              }
             });
+            // Nutrition.getData(oneWeekAgo, today).then((result) {
+            //   setState(() {
+            //     print(result);
+            //     _result = result;
+            //   });
+            // });
           },
         ),
         appBar: AppBar(
