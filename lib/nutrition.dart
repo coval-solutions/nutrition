@@ -11,18 +11,14 @@ class Nutrition {
   }
 
   static Future<bool> requestPermission() async {
-    final bool permissionGranted =
-        await _channel.invokeMethod('requestPermission');
-    return permissionGranted;
+    return await _channel.invokeMethod('requestPermission');
   }
 
   static Future<List> getData(
       DateTime startDateTime, DateTime endDateTime) async {
-    var test = await _channel.invokeMethod('getData', <String, dynamic>{
+    return await _channel.invokeMethod('getData', <String, dynamic>{
       'startDate': startDateTime.millisecondsSinceEpoch,
       'endDate': endDateTime.millisecondsSinceEpoch,
     });
-
-    return [];
   }
 }
