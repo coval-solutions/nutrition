@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:nutrition/nutrition.dart';
 
@@ -19,8 +18,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
-  List<dynamic> _result = [];
+  bool hasPermission = false;
+  DateTime startDate;
+  DateTime endDate;
 
   Future<FirebaseUser> _handleSignIn() async {
     final GoogleSignInAccount googleUser = await widget._googleSignIn.signIn();
@@ -35,73 +35,85 @@ class _MyAppState extends State<MyApp> {
     final FirebaseUser user =
         (await widget._auth.signInWithCredential(credential)).user;
     print("Signed in " + user.displayName);
+
     return user;
   }
 
   @override
   void initState() {
     super.initState();
-    initPlatformState();
-    _handleSignIn();
+    _handleSignIn().then((value) => {
+          if (!hasPermission) {requestPermission()}
+        });
+
+    endDate = DateTime.now();
+    startDate = DateTime.now().subtract(Duration(days: 7));
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformVersion = await Nutrition.platformVersion;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
-    });
+  void requestPermission() async {
+    await Nutrition.requestPermission().then((value) => setState(() {
+          hasPermission = value;
+        }));
   }
 
   @override
   Widget build(BuildContext context) {
-    DateTime today = DateTime.now();
-    DateTime oneWeekAgo = DateTime.now().subtract(Duration(days: 7));
+    if (!hasPermission) {
+      return MaterialApp(
+        home: Scaffold(
+          appBar: AppBar(
+            title: const Text('Nutrition Example App'),
+          ),
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
     return MaterialApp(
       home: Scaffold(
-        floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.sync),
-          backgroundColor: Colors.black,
-          onPressed: () {
-            print('Fab pressed.');
-            Nutrition.requestPermission().then((result) {
-              if (result) {
-                Nutrition.getData(oneWeekAgo, today);
-              }
-            });
-            // Nutrition.getData(oneWeekAgo, today).then((result) {
-            //   setState(() {
-            //     print(result);
-            //     _result = result;
-            //   });
-            // });
-          },
-        ),
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: const Text('Nutrition Example App'),
         ),
-        body: Column(
-          children: <Widget>[
-            Text('Running on: $_platformVersion\n'),
-            Flexible(
-                child: ListView.builder(
-                    itemCount: _result.length,
-                    itemBuilder: (BuildContext ctxt, int index) {
-                      return new Text(_result[index].toString());
-                    })),
-          ],
+        body: SingleChildScrollView(
+          physics: ScrollPhysics(),
+          child: Column(
+            children: <Widget>[
+              FutureBuilder<List>(
+                  future: Nutrition.getData(startDate, endDate),
+                  builder:
+                      (BuildContext context, AsyncSnapshot<List> snapshot) {
+                    if (snapshot.hasData) {
+                      return ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: snapshot.data.length ?? 0,
+                          itemBuilder: (BuildContext context, int index) {
+                            Map<String, String> data =
+                                Map<String, String>.from(snapshot.data[index]);
+                            return ListView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                itemCount: data.entries.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  var entry = data.entries.elementAt(index);
+                                  return ListTile(
+                                    trailing: Text(entry.value),
+                                    title: Text(entry.key),
+                                  );
+                                });
+                          });
+                    }
+
+                    if (snapshot.hasError) {
+                      Center(child: Text(snapshot.error));
+                    }
+
+                    return Center(child: CircularProgressIndicator());
+                  }),
+            ],
+          ),
         ),
       ),
     );
