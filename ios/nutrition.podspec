@@ -4,14 +4,14 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'nutrition'
-  s.version          = '0.0.1'
-  s.summary          = 'A new flutter plugin project.'
+  s.version          = '1.0.0'
+  s.summary          = 'Flutter plugin which allows you to acess Google Fit and iOS Health nutrition data.'
   s.description      = <<-DESC
-A new flutter plugin project.
+Flutter plugin which allows you to acess Google Fit and iOS Health nutrition data.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://covalsolutions.com/'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Coval Solutions Ltd' => 'support@covalsolutions.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'

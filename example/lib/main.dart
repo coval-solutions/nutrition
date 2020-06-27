@@ -23,6 +23,11 @@ class _MyAppState extends State<MyApp> {
   DateTime endDate;
 
   Future<FirebaseUser> _handleSignIn() async {
+    final bool isSignedIn = await widget._googleSignIn.isSignedIn();
+    if (isSignedIn) {
+      return await widget._auth.currentUser();
+    }
+
     final GoogleSignInAccount googleUser = await widget._googleSignIn.signIn();
     final GoogleSignInAuthentication googleAuth =
         await googleUser.authentication;

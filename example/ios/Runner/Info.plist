@@ -41,5 +41,20 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.186925382705-bf313thip9lc8sji0sirq7t0ee91kgpe</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>We require access to your nutrition health data in order to analyse it and offer the best advice</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>We require access to your nutrition health data in order to analyse it and offer the best advice</string>
 </dict>
 </plist>
