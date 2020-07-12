@@ -9,9 +9,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.fitness.Fitness
 import com.google.android.gms.fitness.FitnessOptions
-import com.google.android.gms.fitness.data.DataSet
-import com.google.android.gms.fitness.data.DataType
-import com.google.android.gms.fitness.data.Field
+import com.google.android.gms.fitness.data.*
 import com.google.android.gms.fitness.request.DataReadRequest
 import com.google.android.gms.tasks.Tasks
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -98,6 +96,7 @@ class NutritionPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, PluginR
 
   private val fitnessOptions = FitnessOptions.builder()
       .addDataType(DATA_TYPE, FitnessOptions.ACCESS_READ)
+      .addDataType(DATA_TYPE, FitnessOptions.ACCESS_WRITE)
       .build()
 
   private fun getData(call: MethodCall, result: Result) {
@@ -124,18 +123,18 @@ class NutritionPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, PluginR
           val nutrients = dataPoint.getValue(Field.FIELD_NUTRIENTS)
           return@mapIndexed hashMapOf(
               FIELD_TIMESTAMP to dataPoint.getEndTime(TimeUnit.MILLISECONDS).toString(),
-              getFieldToReturn(Field.NUTRIENT_TOTAL_FAT) to nutrients?.getKeyValue(Field.NUTRIENT_TOTAL_FAT).toString(),
-              getFieldToReturn(Field.NUTRIENT_CALCIUM) to nutrients?.getKeyValue(Field.NUTRIENT_CALCIUM).toString(),
-              getFieldToReturn(Field.NUTRIENT_SUGAR) to nutrients?.getKeyValue(Field.NUTRIENT_SUGAR).toString(),
-              getFieldToReturn(Field.NUTRIENT_DIETARY_FIBER) to nutrients?.getKeyValue(Field.NUTRIENT_DIETARY_FIBER).toString(),
-              getFieldToReturn(Field.NUTRIENT_IRON) to nutrients?.getKeyValue(Field.NUTRIENT_IRON).toString(),
-              getFieldToReturn(Field.NUTRIENT_POTASSIUM) to nutrients?.getKeyValue(Field.NUTRIENT_POTASSIUM).toString(),
-              getFieldToReturn(Field.NUTRIENT_SODIUM) to nutrients?.getKeyValue(Field.NUTRIENT_SODIUM).toString(),
-              getFieldToReturn(Field.NUTRIENT_VITAMIN_A) to nutrients?.getKeyValue(Field.NUTRIENT_VITAMIN_A).toString(),
-              getFieldToReturn(Field.NUTRIENT_VITAMIN_C) to nutrients?.getKeyValue(Field.NUTRIENT_VITAMIN_C).toString(),
-              getFieldToReturn(Field.NUTRIENT_PROTEIN) to nutrients?.getKeyValue(Field.NUTRIENT_PROTEIN).toString(),
-              getFieldToReturn(Field.NUTRIENT_CHOLESTEROL) to nutrients?.getKeyValue(Field.NUTRIENT_CHOLESTEROL).toString(),
-              getFieldToReturn(Field.NUTRIENT_TOTAL_CARBS) to nutrients?.getKeyValue(Field.NUTRIENT_TOTAL_CARBS).toString()
+              getFieldToReturn(Field.NUTRIENT_TOTAL_FAT) to (nutrients?.getKeyValue(Field.NUTRIENT_TOTAL_FAT)?.toString() ?: "0"),
+              getFieldToReturn(Field.NUTRIENT_CALCIUM) to (nutrients?.getKeyValue(Field.NUTRIENT_CALCIUM)?.toString() ?: "0"),
+              getFieldToReturn(Field.NUTRIENT_SUGAR) to (nutrients?.getKeyValue(Field.NUTRIENT_SUGAR)?.toString() ?: "0"),
+              getFieldToReturn(Field.NUTRIENT_DIETARY_FIBER) to (nutrients?.getKeyValue(Field.NUTRIENT_DIETARY_FIBER)?.toString() ?: "0"),
+              getFieldToReturn(Field.NUTRIENT_IRON) to (nutrients?.getKeyValue(Field.NUTRIENT_IRON)?.toString() ?: "0"),
+              getFieldToReturn(Field.NUTRIENT_POTASSIUM) to (nutrients?.getKeyValue(Field.NUTRIENT_POTASSIUM)?.toString() ?: "0"),
+              getFieldToReturn(Field.NUTRIENT_SODIUM) to (nutrients?.getKeyValue(Field.NUTRIENT_SODIUM)?.toString() ?: "0"),
+              getFieldToReturn(Field.NUTRIENT_VITAMIN_A) to (nutrients?.getKeyValue(Field.NUTRIENT_VITAMIN_A)?.toString() ?: "0"),
+              getFieldToReturn(Field.NUTRIENT_VITAMIN_C) to (nutrients?.getKeyValue(Field.NUTRIENT_VITAMIN_C)?.toString() ?: "0"),
+              getFieldToReturn(Field.NUTRIENT_PROTEIN) to (nutrients?.getKeyValue(Field.NUTRIENT_PROTEIN)?.toString() ?: "0"),
+              getFieldToReturn(Field.NUTRIENT_CHOLESTEROL) to (nutrients?.getKeyValue(Field.NUTRIENT_CHOLESTEROL)?.toString() ?: "0"),
+              getFieldToReturn(Field.NUTRIENT_TOTAL_CARBS) to (nutrients?.getKeyValue(Field.NUTRIENT_TOTAL_CARBS)?.toString() ?: "0")
           )
         }
 
@@ -159,6 +158,39 @@ class NutritionPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, PluginR
         getActivity()!!.runOnUiThread { result.success(nutritionData) }
 
       }
+    }
+  }
+
+  private fun addData(call: MethodCall, result: Result) {
+    val nutritionData: HashMap<String, Float> = call.argument<HashMap<String, Float>>("nutrients")!!
+    val googleSignInAccount: GoogleSignInAccount? = GoogleSignIn.getLastSignedInAccount(getActivity()?.applicationContext)
+    if (googleSignInAccount === null) {
+      result.error(COVAL_NUTRITION + "_NOT_LOGGED_IN_ERROR", "You don't seem to be logged in via Google.", "googleSignInAccount is null.")
+    }
+
+    val nutritionSource: DataSource = DataSource.Builder()
+        .setAppPackageName(getActivity()?.applicationContext!!.packageName)
+        .setDataType(DataType.TYPE_NUTRITION)
+        .setType(DataSource.TYPE_RAW)
+        .build()
+
+    val nutrients: HashMap<String, Float> = HashMap()
+    nutritionData.forEach { (key, value) -> nutrients[getFieldToReturnReverse(key)] = value }
+
+    thread {
+      val startTime = call.argument<Long>("startDate")!!
+      val dataPoint: DataPoint = DataPoint.builder(nutritionSource)
+          .setTimestamp(startTime, TimeUnit.MILLISECONDS)
+          .setField(Field.FIELD_MEAL_TYPE, Field.MEAL_TYPE_UNKNOWN)
+          .setField(Field.FIELD_NUTRIENTS, nutrients)
+          .build()
+
+      val dataSet = DataSet.create(nutritionSource)
+      dataSet.add(dataPoint)
+      val dataSetResult = Fitness.getHistoryClient(getActivity()?.applicationContext!!, googleSignInAccount!!)
+          .insertData(dataSet)
+
+      getActivity()!!.runOnUiThread { result.success(dataSetResult.isSuccessful) }
     }
   }
 
@@ -189,6 +221,7 @@ class NutritionPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, PluginR
       "getPlatformVersion" -> result.success("Android ${android.os.Build.VERSION.RELEASE}")
       "requestPermission" -> requestPermission(call, result)
       "getData" -> getData(call, result)
+      "addData" -> addData(call, result)
       else -> result.notImplemented()
     }
   }
@@ -224,6 +257,24 @@ class NutritionPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, PluginR
       Field.NUTRIENT_CHOLESTEROL -> "cholesterol"
       Field.NUTRIENT_TOTAL_CARBS -> "total_carbs"
       else -> field
+    }
+  }
+
+  private fun getFieldToReturnReverse(nutrient: String): String {
+    return when (nutrient) {
+      "total_fat" -> Field.NUTRIENT_TOTAL_FAT
+      "calcium" -> Field.NUTRIENT_CALCIUM
+      "sugar" -> Field.NUTRIENT_SUGAR
+      "fiber" -> Field.NUTRIENT_DIETARY_FIBER
+      "iron" -> Field.NUTRIENT_IRON
+      "potassium" -> Field.NUTRIENT_POTASSIUM
+      "sodium" -> Field.NUTRIENT_SODIUM
+      "vitamin_a" -> Field.NUTRIENT_VITAMIN_A
+      "vitamin_c" -> Field.NUTRIENT_VITAMIN_C
+      "protein" -> Field.NUTRIENT_PROTEIN
+      "cholesterol" -> Field.NUTRIENT_CHOLESTEROL
+      "total_carbs" -> Field.NUTRIENT_TOTAL_CARBS
+      else -> nutrient
     }
   }
 }
