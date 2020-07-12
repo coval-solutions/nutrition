@@ -2,24 +2,25 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:nutrition/nutrition_enum.dart';
 
 class Nutrition {
   static const MethodChannel _channel = const MethodChannel('nutrition');
-  static bool _isAndroid = Platform.isAndroid;
-  static const DATA_TYPES = [
-    "total_fat",
-    "calcium",
-    "sugar",
-    "fiber",
-    "iron",
-    "potassium",
-    "sodium",
-    "vitamin_a",
-    "vitamin_c",
-    "protein",
-    "cholesterol",
-    "total_carbs",
-  ];
+  static final bool _isAndroid = Platform.isAndroid;
+  static final Map<NutritionEnum, String> dataTypes = const {
+    NutritionEnum.FAT: 'total_fat',
+    NutritionEnum.CALCIUM: 'calcium',
+    NutritionEnum.SUGAR: 'sugar',
+    NutritionEnum.FIBRE: 'fiber',
+    NutritionEnum.IRON: 'iron',
+    NutritionEnum.POTASSIUM: 'potassium',
+    NutritionEnum.SODIUM: 'sodium',
+    NutritionEnum.VITAMIN_A: 'vitamin_a',
+    NutritionEnum.VITAMIN_C: 'vitamin_c',
+    NutritionEnum.PROTEIN: 'protein',
+    NutritionEnum.CHOLESTEROL: 'cholesterol',
+    NutritionEnum.CARBOHYDRATES: 'total_carbs',
+  };
 
   static Future<String> get platformVersion async {
     final String version = await _channel.invokeMethod('getPlatformVersion');
@@ -28,6 +29,22 @@ class Nutrition {
 
   static Future<bool> requestPermission() async {
     return await _channel.invokeMethod('requestPermission');
+  }
+
+  static void addData(Map<NutritionEnum, double> nutrients,
+      DateTime startDateTime, DateTime endDateTime) async {
+    nutrients.forEach((key, value) async {
+      if (value > 0) {
+        await _channel.invokeMethod('addData', <String, dynamic>{
+          'dataType': key,
+          'value': value,
+          'startDate': startDateTime.millisecondsSinceEpoch,
+          'endDate': endDateTime.millisecondsSinceEpoch,
+        });
+      }
+    });
+
+    return;
   }
 
   static Future<List> getData(
@@ -40,15 +57,16 @@ class Nutrition {
     }
 
     Map<String, String> nutrients = {};
-    for (String dataType in DATA_TYPES) {
-      var value = await _channel.invokeMethod('getData', <String, dynamic>{
+    for (String dataType in dataTypes.values.toList()) {
+      var nutrientValue =
+          await _channel.invokeMethod('getData', <String, dynamic>{
         'dataType': dataType,
         'startDate': startDateTime.millisecondsSinceEpoch,
         'endDate': endDateTime.millisecondsSinceEpoch,
       });
 
       nutrients.addAll({
-        dataType: value,
+        dataType: nutrientValue,
       });
     }
 
