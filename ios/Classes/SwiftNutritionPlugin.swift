@@ -75,19 +75,16 @@ public class SwiftNutritionPlugin: NSObject, FlutterPlugin {
     let arguments = call.arguments as? NSDictionary
     let dataTypeKey = (arguments?["dataType"] as? String) ?? "DEFAULT"
     let value = (arguments?["value"] as? Double) ?? 0.0
-    let startDate = (arguments?["startDate"] as? NSNumber) ?? 0
-    let endDate = (arguments?["endDate"] as? NSNumber) ?? 0
+    let date = (arguments?["date"] as? NSNumber) ?? 0
     let dataType = dataTypeLookUp(key: dataTypeKey)
     
     // Convert dates from milliseconds to Date()
-    let startDateObj = Date(timeIntervalSince1970: startDate.doubleValue / 1000)
-    let endDateObj = Date(timeIntervalSince1970: endDate.doubleValue / 1000)
-    
+    let dateObj = Date(timeIntervalSince1970: date.doubleValue / 1000)
     
     let nutritent = HKQuantitySample.init(type: dataType.0,
                                           quantity: HKQuantity.init(unit: unitLookUp(key: dataTypeKey), doubleValue: value),
-                                          start: startDateObj,
-                                          end: endDateObj)
+                                          start: dateObj,
+                                          end: dateObj)
     
     healthStore.save(nutritent) { success, error in
       if (error != nil) {
