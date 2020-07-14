@@ -31,8 +31,8 @@ class Nutrition {
     return await _channel.invokeMethod('requestPermission');
   }
 
-  static void addData(Map<NutritionEnum, double> nutrients,
-      DateTime startDateTime, DateTime endDateTime) async {
+  static void addData(
+      Map<NutritionEnum, double> nutrients, DateTime dateTime) async {
     Map<String, double> nutrientsToSend = {};
     nutrients.forEach((key, value) {
       if (value > 0) {
@@ -41,22 +41,19 @@ class Nutrition {
     });
 
     if (_isAndroid) {
-      var test = await _channel.invokeMethod('addData', <String, dynamic>{
-        'nutrients': nutrientsToSend,
-        'startDate': startDateTime.millisecondsSinceEpoch,
-      });
-
-      return;
-    }
-
-    nutrientsToSend.forEach((key, value) async {
       await _channel.invokeMethod('addData', <String, dynamic>{
-        'dataType': key,
-        'value': value,
-        'startDate': startDateTime.millisecondsSinceEpoch,
-        'endDate': endDateTime.millisecondsSinceEpoch,
+        'nutrients': nutrientsToSend,
+        'date': dateTime.millisecondsSinceEpoch,
       });
-    });
+    } else {
+      nutrientsToSend.forEach((key, value) async {
+        await _channel.invokeMethod('addData', <String, dynamic>{
+          'dataType': key,
+          'value': value,
+          'date': dateTime.millisecondsSinceEpoch,
+        });
+      });
+    }
 
     return;
   }

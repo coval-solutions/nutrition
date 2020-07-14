@@ -1,22 +1,25 @@
 workflows:
-  development:
-    name: Development
+  default-workflow:
+    name: Default Workflow
     max_build_duration: 60
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
     cache:
-      cache_paths:
-        - $FCI_BUILD_DIR/build
+      cache_paths: []
     triggering:
       events:
         - pull_request
-        - tag
       branch_patterns:
         - pattern: master
           include: true
           source: false
     scripts:
       - flutter packages pub get
-      - flutter test
+    artifacts:
+      - flutter_drive.log
+    publishing:
+      slack:
+        channel: "#builds"
+        notify_on_build_start: true
