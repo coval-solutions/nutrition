@@ -11,6 +11,7 @@ workflows:
     triggering:
       events:
         - pull_request
+        - tag
       branch_patterns:
         - pattern: master
           include: true
@@ -21,5 +22,5 @@ workflows:
       - flutter_drive.log
     publishing:
       slack:
-        channel: "#builds"
+        channel: '#builds'
         notify_on_build_start: true
