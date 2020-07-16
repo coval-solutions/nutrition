@@ -7,8 +7,7 @@ workflows:
       xcode: latest
       cocoapods: default
     cache:
-      cache_paths:
-        - $FCI_BUILD_DIR/build
+      cache_paths: []
     triggering:
       events:
         - push
