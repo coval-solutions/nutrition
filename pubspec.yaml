@@ -1,7 +1,6 @@
 name: nutrition
 description: Flutter plugin which allows you to acess Google Fit and iOS Health nutrition data.
 version: 1.0.0
-author: Coval Solutions Ltd
 homepage: https://covalsolutions.com/
 
 environment:
