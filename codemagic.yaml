@@ -7,20 +7,24 @@ workflows:
       xcode: latest
       cocoapods: default
     cache:
-      cache_paths: []
+      cache_paths:
+        - $FCI_BUILD_DIR/build
     triggering:
       events:
+        - push
         - pull_request
-        - tag
       branch_patterns:
         - pattern: master
           include: true
           source: false
+        - pattern: master
+          include: true
+          source: true
     scripts:
       - flutter packages pub get
     artifacts:
       - flutter_drive.log
     publishing:
       slack:
-        channel: '#builds'
+        channel: "#builds"
         notify_on_build_start: true
