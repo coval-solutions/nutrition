@@ -47,8 +47,7 @@ _Note for Android users you must have Google Sign In setup with your Flutter app
 ```dart
 DateTime endDate = DateTime.now();
 DateTime startDate = DateTime.now().subtract(Duration(days: 7));
-Nutrition.getData(startDate, endDate)
-}));
+Nutrition.getData(startDate, endDate);
 ```
 
 ### 🍌 Add Data
@@ -65,8 +64,7 @@ Map<NutritionEnum, double> nutrients = {
 };
 
 // Pass a Map<NutritionEnum, double> and a date
-Nutrition.addData(nutrients, date)
-}));
+Nutrition.addData(nutrients, date);
 ```
 
 ## 📝 License
