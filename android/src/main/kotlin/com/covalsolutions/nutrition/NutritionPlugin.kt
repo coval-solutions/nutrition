@@ -178,7 +178,7 @@ class NutritionPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, PluginR
     nutritionData.forEach { (key, value) -> nutrients[getFieldToReturnReverse(key)] = value }
 
     thread {
-      val startTime = call.argument<Long>("startDate")!!
+      val startTime = call.argument<Long>("date")!!
       val dataPoint: DataPoint = DataPoint.builder(nutritionSource)
           .setTimestamp(startTime, TimeUnit.MILLISECONDS)
           .setField(Field.FIELD_MEAL_TYPE, Field.MEAL_TYPE_UNKNOWN)
