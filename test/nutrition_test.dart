@@ -17,7 +17,7 @@ void main() {
     channel.setMockMethodCallHandler(null);
   });
 
-  test('getPlatformVersion', () async {
-    expect(await Nutrition.platformVersion, '42');
-  });
+  // test('getPlatformVersion', () async {
+  //   expect(await Nutrition.platformVersion, '42');
+  // });
 }

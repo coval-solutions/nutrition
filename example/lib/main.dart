@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:nutrition/nutrition.dart';
+import 'package:nutrition/health_data_types.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,18 +26,26 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> initPlatformState() async {
-    List<String> nutrientEnums = [];
-    try {
-      nutrientEnums = await Nutrition.nutrientEnums;
-    } on PlatformException {
-      nutrientEnums = [];
+    bool requested =
+        await Nutrition.requestAuthorization(HealthDataTypes.values);
+
+    if (requested) {
+      final now = DateTime.now();
+      final fromDate = now.subtract(const Duration(days: 6));
+
+      List<String> nutrientEnums = [];
+      try {
+        // nutrientEnums = await Nutrition.nutrientEnums;
+        var test = await Nutrition.getHealthData(
+            [HealthDataTypes.aggregateNutritionSummary], fromDate, now);
+      } on PlatformException {
+        nutrientEnums = [];
+      }
+
+      setState(() {
+        _nutrientEnums = nutrientEnums;
+      });
     }
-
-    if (!mounted) return;
-
-    setState(() {
-      _nutrientEnums = nutrientEnums;
-    });
   }
 
   @override
@@ -47,7 +56,7 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Nutrition'),
         ),
         body: Center(
-          child: Text(_nutrientEnums.first),
+          child: Text('Test'),
         ),
       ),
     );
