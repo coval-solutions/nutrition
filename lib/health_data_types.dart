@@ -11,5 +11,4 @@ enum HealthDataTypes {
   protein,
   cholesterol,
   totalCarbs,
-  aggregateNutritionSummary,
 }

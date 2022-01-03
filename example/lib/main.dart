@@ -31,13 +31,15 @@ class _MyAppState extends State<MyApp> {
 
     if (requested) {
       final now = DateTime.now();
-      final fromDate = now.subtract(const Duration(days: 6));
+      final lastMidnight = DateTime(now.year, now.month, now.day);
+      final fromDate = lastMidnight.subtract(const Duration(days: 6));
 
       List<String> nutrientEnums = [];
       try {
         // nutrientEnums = await Nutrition.nutrientEnums;
         var test = await Nutrition.getHealthData(
-            [HealthDataTypes.aggregateNutritionSummary], fromDate, now);
+            HealthDataTypes.values, fromDate, now);
+        var test2 = "test";
       } on PlatformException {
         nutrientEnums = [];
       }
