@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:nutrition/nutrition.dart';
 import 'package:nutrition/health_data_types.dart';
 
@@ -17,7 +16,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  List<String> _nutrientEnums = [];
+  bool _hasPermission = false;
 
   @override
   void initState() {
@@ -26,40 +25,43 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> initPlatformState() async {
-    bool requested =
+    bool hasPermission =
         await Nutrition.requestAuthorization(HealthDataTypes.values);
-
-    if (requested) {
-      final now = DateTime.now();
-      final lastMidnight = DateTime(now.year, now.month, now.day);
-      final fromDate = lastMidnight.subtract(const Duration(days: 6));
-
-      List<String> nutrientEnums = [];
-      try {
-        // nutrientEnums = await Nutrition.nutrientEnums;
-        var test = await Nutrition.getHealthData(
-            HealthDataTypes.values, fromDate, now);
-        var test2 = "test";
-      } on PlatformException {
-        nutrientEnums = [];
-      }
-
-      setState(() {
-        _nutrientEnums = nutrientEnums;
-      });
-    }
+    setState(() {
+      _hasPermission = hasPermission;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final lastMidnight = DateTime(now.year, now.month, now.day);
+    final fromDate = lastMidnight.subtract(const Duration(days: 6));
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Nutrition'),
         ),
-        body: Center(
-          child: Text('Test'),
-        ),
+        body: _hasPermission
+            ? FutureBuilder(
+                future: Nutrition.getHealthData(
+                    HealthDataTypes.values, fromDate, now),
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      return const Center(child: CircularProgressIndicator());
+                    default:
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else {
+                        return Center(child: Text('Result: ${snapshot.data}'));
+                      }
+                  }
+                },
+              )
+            : const Center(
+                child: CircularProgressIndicator(),
+              ),
       ),
     );
   }
